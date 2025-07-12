@@ -1,13 +1,25 @@
-import {ApiError} from "../utils/ApiError.js"
-import {ApiResponse} from "../utils/ApiResponse.js"
-import {asyncHandler} from "../utils/asyncHandler.js"
-
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 const healthcheck = asyncHandler(async (req, res) => {
-    //TODO: build a healthcheck response that simply returns the OK status as json with a message
-})
+  // Create health check response object
+  const healthcheck = {
+    status: "OK",
+    uptime: `${process.uptime()} seconds`,
+    timestamp: new Date().toISOString(),
+    message: "Service is healthy and operational",
+    details: {
+      memoryUsage: process.memoryUsage(),
+      platform: process.platform,
+      nodeVersion: process.version,
+    },
+  };
 
-export {
-    healthcheck
-    }
-    
+  // Send success response
+  return res
+    .status(200)
+    .json(new ApiResponse(200, healthcheck, "Healthcheck successful"));
+});
+
+export { healthcheck };

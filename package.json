@@ -1,7 +1,7 @@
 {
-  "name": "chai-backend",
+  "name": "video_backend_app",
   "version": "1.0.0",
-  "description": "a backend at chai aur code channel - youtube",
+  "description": "",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -10,9 +10,9 @@
   "keywords": [
     "javascript",
     "backend",
-    "chai"
+    "coding"
   ],
-  "author": "Hitesh Choudhary",
+  "author": "Muhammad Zeeshan Khan",
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^3.0.1",
