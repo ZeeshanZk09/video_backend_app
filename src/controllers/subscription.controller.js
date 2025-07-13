@@ -88,39 +88,43 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
   const { subscriberId } = req.params;
   const { page = 1, limit = 10 } = req.query;
 
-  if (!isValidObjectId(subscriberId)) {
-    throw new ApiError(400, "Invalid subscriber ID");
+  if (!mongoose.Types.ObjectId.isValid(subscriberId)) {
+    throw new ApiError(400, "Invalid subscriber ID format");
   }
 
   const options = {
     page: parseInt(page),
     limit: parseInt(limit),
+    sort: { createdAt: -1 },
     populate: {
       path: "channel",
       select: "username fullName avatar isVerified",
+      // Remove nested populate if causing issues
     },
   };
 
-  const subscriptions = await Subscription.paginate(
-    { subscriber: subscriberId },
-    options
-  );
+  try {
+    const result = await Subscription.paginate(
+      { subscriber: subscriberId },
+      options
+    );
 
-  if (!subscriptions || subscriptions.totalDocs === 0) {
-    return res
-      .status(200)
-      .json(new ApiResponse(200, [], "No channel subscriptions found"));
-  }
-
-  return res
-    .status(200)
-    .json(
+    return res.status(200).json(
       new ApiResponse(
         200,
-        subscriptions,
+        {
+          subscriptions: result.docs,
+          totalSubscriptions: result.totalDocs,
+          totalPages: result.totalPages,
+          currentPage: result.page,
+        },
         "Subscribed channels fetched successfully"
       )
     );
+  } catch (error) {
+    console.error("Subscription error:", error);
+    throw new ApiError(500, "Failed to fetch subscriptions");
+  }
 });
 
 export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };

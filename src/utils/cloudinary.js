@@ -69,20 +69,33 @@ const deleteFromCloudinary = async (
   options = { resource_type: "image" }
 ) => {
   try {
-    if (!publicId) {
-      throw new Error("No public ID provided");
+    // Validate publicId
+    if (!publicId || typeof publicId !== "string") {
+      throw new Error("Invalid public ID provided");
     }
+
+    console.log(`Attempting to delete Cloudinary resource: ${publicId}`); // Debug log
 
     const result = await cloudinary.uploader.destroy(publicId, options);
 
-    if (result.result !== "ok") {
-      throw new Error(`Failed to delete: ${result.result}`);
+    // Handle different Cloudinary response scenarios
+    switch (result.result) {
+      case "ok":
+        console.log(`Successfully deleted: ${publicId}`);
+        return result;
+      case "not found":
+        console.warn(`Resource not found: ${publicId}`);
+        return { ...result, warning: "Resource not found" }; // Soft fail
+      default:
+        throw new Error(`Cloudinary deletion failed: ${result.result}`);
     }
-
-    return result;
   } catch (error) {
-    console.error("Cloudinary deletion error:", error.message);
-    throw error; // Re-throw to handle in controller
+    console.error("Cloudinary deletion error:", {
+      publicId,
+      error: error.message,
+      stack: error.stack,
+    });
+    throw new Error(`Failed to delete resource: ${error.message}`);
   }
 };
 

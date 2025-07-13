@@ -1,7 +1,12 @@
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from "../constants.js";
+import {
+  ACCESS_TOKEN_EXPIRY,
+  ACCESS_TOKEN_SECRET,
+  REFRESH_TOKEN_EXPIRY,
+  REFRESH_TOKEN_SECRET,
+} from "../constants.js";
 
 const userSchema = new Schema(
   {

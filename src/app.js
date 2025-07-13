@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { CORS_ORIGIN } from "./constants.js";
+import { API_ROUTE, CORS_ORIGIN } from "./constants.js";
 
 const app = express();
 
@@ -27,14 +27,13 @@ import commentRouter from "./routes/comment.routes.js";
 import likeRouter from "./routes/like.routes.js";
 import playlistRouter from "./routes/playlist.routes.js";
 import dashboardRouter from "./routes/dashboard.routes.js";
-import { API_ROUTE, CORS_ORIGIN } from "./constants.js";
 
 //routes declaration
 app.use(`${API_ROUTE}/users`, userRouter);
+app.use(`${API_ROUTE}/subscriptions`, subscriptionRouter);
+app.use(`${API_ROUTE}/videos`, videoRouter);
 app.use(`${API_ROUTE}/dashboard`, dashboardRouter);
 app.use(`${API_ROUTE}/playlist`, playlistRouter);
-app.use(`${API_ROUTE}/videos`, videoRouter);
-app.use(`${API_ROUTE}/subscriptions`, subscriptionRouter);
 app.use(`${API_ROUTE}/comments`, commentRouter);
 app.use(`${API_ROUTE}/likes`, likeRouter);
 app.use(`${API_ROUTE}/tweets`, tweetRouter);

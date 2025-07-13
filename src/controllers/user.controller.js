@@ -13,16 +13,43 @@ import { NODE_ENV, REFRESH_TOKEN_SECRET } from "../constants.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
-    const user = await User.findById(userId);
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    // 1. Validate userId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new Error("Invalid user ID format");
+    }
 
+    // 2. Find user with additional checks
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // 3. Check if token secrets exist
+    if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
+      throw new Error("Token secrets not configured in environment variables");
+    }
+
+    // 4. Generate tokens with error handling
+    let accessToken, refreshToken;
+    try {
+      accessToken = user.generateAccessToken();
+      refreshToken = user.generateRefreshToken();
+    } catch (tokenError) {
+      console.error("Token generation error:", tokenError);
+      throw new Error("Failed to sign tokens");
+    }
+
+    // 5. Save refresh token with additional validation
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
-    return { accessToken, refreshToken };
+    return {
+      accessToken,
+      refreshToken,
+    };
   } catch (error) {
-    throw new ApiError(500, "Failed to generate tokens");
+    console.error("Error in generateAccessAndRefreshTokens:", error);
+    throw new ApiError(500, error.message || "Failed to generate tokens");
   }
 };
 
@@ -75,31 +102,44 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   const { email, username, password } = req.body;
 
-  if (!username && !email) {
-    throw new ApiError(400, "Username or email required");
+  // More detailed validation
+  if (!password) {
+    throw new ApiError(400, "Password is required");
   }
 
-  const user = await User.findOne({ $or: [{ username }, { email }] });
+  if (!username && !email) {
+    throw new ApiError(400, "Either username or email is required");
+  }
+
+  // Find user by username or email
+  const user = await User.findOne({
+    $or: [{ username }, { email }],
+  });
+
   if (!user) {
     throw new ApiError(404, "User not found");
   }
 
+  // Password verification
   const isPasswordValid = await user.isPasswordCorrect(password);
   if (!isPasswordValid) {
     throw new ApiError(401, "Invalid credentials");
   }
 
+  // Generate tokens
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
     user._id
   );
 
+  // Get user without sensitive fields
   const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
 
+  // Cookie options
   const options = {
     httpOnly: true,
-    secure: NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
   };
 
@@ -115,7 +155,7 @@ const loginUser = asyncHandler(async (req, res) => {
           accessToken,
           refreshToken,
         },
-        "Login successful"
+        "User logged in successfully"
       )
     );
 });
@@ -199,19 +239,61 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
-  const { fullName, email } = req.body;
+  const { fullName, email, username } = req.body;
 
-  if (!fullName || !email) {
-    throw new ApiError(400, "All fields required");
+  // Check if at least one field is provided
+  if (!fullName && !email && !username) {
+    throw new ApiError(400, "At least one field is required for update");
+  }
+
+  const updateFields = {};
+  const validationChecks = [];
+
+  // Prepare update fields and validation checks
+  if (fullName) {
+    updateFields.fullName = fullName;
+  }
+
+  if (email) {
+    updateFields.email = email;
+    validationChecks.push({ email });
+  }
+
+  if (username) {
+    updateFields.username = username;
+    validationChecks.push({ username });
+  }
+
+  // Check for existing users only if email or username is being updated
+  if (validationChecks.length > 0) {
+    const existedUser = await User.findOne({
+      $and: [
+        { $or: validationChecks },
+        { _id: { $ne: req.user?._id } }, // Exclude current user
+      ],
+    });
+
+    if (existedUser) {
+      throw new ApiError(
+        409,
+        "User with this email or username already exists"
+      );
+    }
   }
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
-    { $set: { fullName, email } },
+    { $set: updateFields },
     { new: true }
-  ).select("-password");
+  ).select("-password -refreshToken");
 
-  return res.status(200).json(new ApiResponse(200, user, "Account updated"));
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Account details updated successfully"));
 });
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
