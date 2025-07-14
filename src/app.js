@@ -35,8 +35,8 @@ app.use(`${API_ROUTE}/videos`, videoRouter);
 app.use(`${API_ROUTE}/dashboard`, dashboardRouter);
 app.use(`${API_ROUTE}/playlist`, playlistRouter);
 app.use(`${API_ROUTE}/comments`, commentRouter);
-app.use(`${API_ROUTE}/likes`, likeRouter);
 app.use(`${API_ROUTE}/tweets`, tweetRouter);
+app.use(`${API_ROUTE}/likes`, likeRouter);
 app.use(`${API_ROUTE}/healthcheck`, healthcheckRouter);
 
 // http://localhost:8000/api/v1/users/register

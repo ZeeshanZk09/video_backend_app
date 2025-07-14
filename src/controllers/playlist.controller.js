@@ -3,29 +3,61 @@ import { Playlist } from "../models/playlist.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import {
+  deleteFromCloudinary,
+  uploadOnCloudinary,
+} from "../utils/cloudinary.js";
 
 const createPlaylist = asyncHandler(async (req, res) => {
-  const { name, description } = req.body;
+  let { name, description = "" } = req.body;
   const userId = req.user?._id;
 
   if (!name || name.trim() === "") {
     throw new ApiError(400, "Playlist name is required");
   }
 
+  // Get thumbnail from request files
+  const thumbnailLocalPath = req.file?.path;
+
+  if (!thumbnailLocalPath) {
+    throw new ApiError(400, "Thumbnail file is required");
+  }
+
+  // Upload thumbnail to Cloudinary
+  const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+
+  if (!thumbnail) {
+    throw new ApiError(500, "Failed to upload thumbnail");
+  }
+
   const playlist = await Playlist.create({
     name: name.trim(),
     description: description?.trim(),
     owner: userId,
-    videos: [], // Initialize with empty videos array
+    videos: [],
+    thumbnail: {
+      url: thumbnail.url,
+      publicId: thumbnail.public_id,
+    },
   });
 
   if (!playlist) {
+    // Delete uploaded thumbnail if playlist creation fails
+    await deleteFromCloudinary(thumbnail.public_id);
     throw new ApiError(500, "Failed to create playlist");
   }
 
+  // Populate owner details
+  const populatedPlaylist = await Playlist.findById(playlist._id).populate({
+    path: "owner",
+    select: "username avatar",
+  });
+
   return res
     .status(201)
-    .json(new ApiResponse(201, playlist, "Playlist created successfully"));
+    .json(
+      new ApiResponse(201, populatedPlaylist, "Playlist created successfully")
+    );
 });
 
 const getUserPlaylists = asyncHandler(async (req, res) => {
@@ -184,7 +216,11 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
   }
 
   // Check if video already exists in playlist
-  if (playlist.videos.includes(new mongoose.Types.ObjectId(videoId))) {
+  if (
+    playlist.videos.some((vid) =>
+      vid.equals(new mongoose.Types.ObjectId(videoId))
+    )
+  ) {
     throw new ApiError(400, "Video already exists in playlist");
   }
 
@@ -192,13 +228,21 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
   const updatedPlaylist = await Playlist.findByIdAndUpdate(
     playlistId,
     {
-      $addToSet: { videos: videoId }, // Using addToSet to prevent duplicates
+      $addToSet: { videos: videoId },
     },
     { new: true }
   ).populate({
     path: "videos",
-    select: "title thumbnail duration",
+    select: "title thumbnail duration owner",
+    populate: {
+      path: "owner",
+      select: "username avatar",
+    },
   });
+
+  if (!updatedPlaylist) {
+    throw new ApiError(500, "Failed to add video to playlist");
+  }
 
   return res
     .status(200)
@@ -239,6 +283,10 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
   ).populate({
     path: "videos",
     select: "title thumbnail duration",
+    populate: {
+      path: "owner",
+      select: "username avatar",
+    },
   });
 
   return res
@@ -260,7 +308,8 @@ const deletePlaylist = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid playlist ID");
   }
 
-  const playlist = await Playlist.findOneAndDelete({
+  // First find the playlist to get the thumbnail info
+  const playlist = await Playlist.findOne({
     _id: playlistId,
     owner: userId,
   });
@@ -268,6 +317,17 @@ const deletePlaylist = asyncHandler(async (req, res) => {
   if (!playlist) {
     throw new ApiError(404, "Playlist not found or you don't have permission");
   }
+
+  // Delete thumbnail from Cloudinary if exists
+  if (playlist.thumbnail?.publicId) {
+    await deleteFromCloudinary(playlist.thumbnail.publicId).catch((error) => {
+      console.error("Failed to delete thumbnail from Cloudinary:", error);
+      // Continue with playlist deletion even if thumbnail deletion fails
+    });
+  }
+
+  // Now delete the playlist
+  await Playlist.deleteOne({ _id: playlistId });
 
   return res
     .status(200)
@@ -279,27 +339,59 @@ const updatePlaylist = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
   const userId = req.user?._id;
 
+  console.log("Request received:", { name, description, file: req.file });
+
   if (!isValidObjectId(playlistId)) {
     throw new ApiError(400, "Invalid playlist ID");
   }
 
-  if (!name || name.trim() === "") {
-    throw new ApiError(400, "Playlist name is required");
+  const updateFields = {};
+
+  // Handle name update
+  if (name !== undefined) {
+    if (typeof name === "string" && name.trim() === "") {
+      throw new ApiError(400, "Playlist name cannot be empty");
+    }
+    updateFields.name = typeof name === "string" ? name.trim() : name;
+  }
+
+  // Handle description update
+  if (description !== undefined) {
+    updateFields.description =
+      typeof description === "string" ? description.trim() : description;
+  }
+
+  // Handle thumbnail update
+  const thumbnailLocalPath = req.file?.path;
+  if (thumbnailLocalPath) {
+    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+    if (!thumbnail) {
+      throw new ApiError(500, "Failed to upload thumbnail");
+    }
+
+    const currentPlaylist = await Playlist.findById(playlistId);
+    if (currentPlaylist?.thumbnail?.publicId) {
+      await deleteFromCloudinary(currentPlaylist.thumbnail.publicId);
+    }
+
+    updateFields.thumbnail = {
+      url: thumbnail.url,
+      publicId: thumbnail.public_id,
+    };
+  }
+
+  if (Object.keys(updateFields).length === 0) {
+    const playlist = await Playlist.findById(playlistId).populate("owner");
+    return res
+      .status(200)
+      .json(new ApiResponse(200, playlist, "No changes detected"));
   }
 
   const playlist = await Playlist.findOneAndUpdate(
-    {
-      _id: playlistId,
-      owner: userId,
-    },
-    {
-      $set: {
-        name: name.trim(),
-        description: description?.trim(),
-      },
-    },
-    { new: true }
-  );
+    { _id: playlistId, owner: userId },
+    { $set: updateFields },
+    { new: true, runValidators: true }
+  ).populate("owner");
 
   if (!playlist) {
     throw new ApiError(404, "Playlist not found or you don't have permission");

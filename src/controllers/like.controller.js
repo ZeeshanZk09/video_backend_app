@@ -22,7 +22,7 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
   if (existingLike) {
     // Unlike the video
     await Like.findByIdAndDelete(existingLike._id);
-    likeStatus = "unliked";
+    likeStatus = "unLiked";
   } else {
     // Like the video
     await Like.create({
@@ -57,7 +57,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
   if (existingLike) {
     // Unlike the comment
     await Like.findByIdAndDelete(existingLike._id);
-    likeStatus = "unliked";
+    likeStatus = "unLiked";
   } else {
     // Like the comment
     await Like.create({
@@ -92,7 +92,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
   if (existingLike) {
     // Unlike the tweet
     await Like.findByIdAndDelete(existingLike._id);
-    likeStatus = "unliked";
+    likeStatus = "unLiked";
   } else {
     // Like the tweet
     await Like.create({
