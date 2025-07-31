@@ -3,9 +3,9 @@ import { DB_NAME, MONGODB_URI } from "../constants.js";
 
 const connectDB = async () => {
   try {
-    if (!MONGODB_URI) {
-      throw new Error("MONGODB_URI is not defined in environment variables");
-    }
+    // if (!MONGODB_URI) {
+    //   throw new Error("MONGODB_URI is not defined in environment variables");
+    // }
 
     // Ensure the connection string ends with the database name
     const connectionString = MONGODB_URI.endsWith("/")

@@ -10,48 +10,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { NODE_ENV, REFRESH_TOKEN_SECRET } from "../constants.js";
-
-const generateAccessAndRefreshTokens = async (userId) => {
-  try {
-    // 1. Validate userId
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      throw new Error("Invalid user ID format");
-    }
-
-    // 2. Find user with additional checks
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // 3. Check if token secrets exist
-    if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
-      throw new Error("Token secrets not configured in environment variables");
-    }
-
-    // 4. Generate tokens with error handling
-    let accessToken, refreshToken;
-    try {
-      accessToken = user.generateAccessToken();
-      refreshToken = user.generateRefreshToken();
-    } catch (tokenError) {
-      console.error("Token generation error:", tokenError);
-      throw new Error("Failed to sign tokens");
-    }
-
-    // 5. Save refresh token with additional validation
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
-
-    return {
-      accessToken,
-      refreshToken,
-    };
-  } catch (error) {
-    console.error("Error in generateAccessAndRefreshTokens:", error);
-    throw new ApiError(500, error.message || "Failed to generate tokens");
-  }
-};
+import { generateAccessAndRefreshTokens } from "../utils/generateToken.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   const { fullName, email, username, password } = req.body;
@@ -139,7 +98,7 @@ const loginUser = asyncHandler(async (req, res) => {
   // Cookie options
   const options = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: NODE_ENV === "production",
     sameSite: "strict",
   };
 
