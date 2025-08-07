@@ -49,12 +49,24 @@ const registerUser = asyncHandler(async (req, res) => {
     coverImage: coverImage?.url || "",
   });
 
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    user._id
+  );
+
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
 
+  const options = {
+    httpOnly: true,
+    secure: NODE_ENV === "production",
+    sameSite: "strict",
+  };
+
   return res
     .status(201)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .json(new ApiResponse(201, createdUser, "User registered successfully"));
 });
 

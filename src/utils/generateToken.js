@@ -1,11 +1,12 @@
 import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from "../constants.js";
 import { User } from "../models/user.model.js";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
     // 1. Validate userId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      throw new Error("Invalid user ID format");
+      throw new Error("Invalid user ID format"); // return
     }
 
     // 2. Find user with additional checks
@@ -23,18 +24,19 @@ const generateAccessAndRefreshTokens = async (userId) => {
     // 4. Generate tokens with error handling
     let accessToken, refreshToken;
     try {
-      accessToken = user.generateAccessToken();
-      refreshToken = user.generateRefreshToken();
+      accessToken = await user.generateAccessToken();
+      refreshToken = await user.generateRefreshToken();
     } catch (tokenError) {
       console.error("Token generation error:", tokenError);
       throw new Error("Failed to sign tokens");
     }
 
-    console.log(user);
+    // console.log(user);
 
     // 5. Save refresh token with additional validation
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
+    // validateBeforeSave: false kl parhna he
 
     return {
       accessToken,
