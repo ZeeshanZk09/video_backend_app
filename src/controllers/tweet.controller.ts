@@ -13,10 +13,7 @@ const createTweet = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Tweet content is required");
   }
 
-  const tweet = await Tweet.create({
-    content: content.trim(),
-    owner: userId,
-  });
+  const tweet = await Tweet.create({ content: content.trim(), owner: userId });
 
   if (!tweet) {
     throw new ApiError(500, "Failed to create tweet");
@@ -42,13 +39,10 @@ const getUserTweets = asyncHandler(async (req, res) => {
   }
 
   const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
+    page: parseInt(page as string),
+    limit: parseInt(limit as string),
     sort: { createdAt: -1 }, // Newest first
-    populate: {
-      path: "owner",
-      select: "username avatar",
-    },
+    populate: { path: "owner", select: "username avatar" },
   };
 
   const tweets = await Tweet.paginate({ owner: userId }, options);
@@ -88,14 +82,8 @@ const updateTweet = asyncHandler(async (req, res) => {
         edited: true, // Mark as edited
       },
     },
-    {
-      new: true,
-      runValidators: true,
-    }
-  ).populate({
-    path: "owner",
-    select: "username avatar",
-  });
+    { new: true, runValidators: true }
+  ).populate({ path: "owner", select: "username avatar" });
 
   if (!tweet) {
     throw new ApiError(404, "Tweet not found or you don't have permission");

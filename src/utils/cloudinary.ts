@@ -19,7 +19,10 @@ cloudinary.config({
  * @param {string} localFilePath - Path to the local file
  * @returns {Promise<Object|null>} - Cloudinary response object or null if failed
  */
-const uploadOnCloudinary = async (localFilePath) => {
+const uploadOnCloudinary = async (
+  localFilePath: string,
+  options?: { resourceType?: "auto" | "image" | "video" | "raw" }
+) => {
   try {
     if (!localFilePath || !fs.existsSync(localFilePath)) {
       console.warn("File not found at path:", localFilePath);
@@ -27,26 +30,26 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 
     const response = await cloudinary.uploader.upload(localFilePath, {
-      resource_type: "auto",
+      resource_type: options?.resourceType ?? "auto",
       timeout: 60000,
     });
 
     // Clean up local file
     try {
       fs.unlinkSync(localFilePath);
-    } catch (unlinkError) {
+    } catch (unlinkError: any) {
       console.error("Error deleting local file:", unlinkError.message);
     }
 
     return response;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Cloudinary upload error:", error.message);
 
     // Attempt to clean up local file if it exists
     if (localFilePath && fs.existsSync(localFilePath)) {
       try {
         fs.unlinkSync(localFilePath);
-      } catch (unlinkError) {
+      } catch (unlinkError: any) {
         console.error(
           "Error deleting local file after failed upload:",
           unlinkError.message
@@ -65,8 +68,8 @@ const uploadOnCloudinary = async (localFilePath) => {
  * @returns {Promise<Object>} - Cloudinary deletion response
  */
 const deleteFromCloudinary = async (
-  publicId,
-  options = { resource_type: "image" }
+  publicId: string,
+  options?: { resource_type?: "auto" | "image" | "video" | "raw" }
 ) => {
   try {
     // Validate publicId
@@ -89,7 +92,7 @@ const deleteFromCloudinary = async (
       default:
         throw new Error(`Cloudinary deletion failed: ${result.result}`);
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Cloudinary deletion error:", {
       publicId,
       error: error.message,
@@ -104,7 +107,7 @@ const deleteFromCloudinary = async (
  * @param {string} url - Cloudinary URL
  * @returns {string|null} - Extracted public ID or null if invalid URL
  */
-const getPublicIdFromUrl = (url) => {
+const getPublicIdFromUrl = (url: string) => {
   if (!url) return null;
 
   try {

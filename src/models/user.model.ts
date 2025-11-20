@@ -6,9 +6,26 @@ import {
   ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_EXPIRY,
   REFRESH_TOKEN_SECRET,
-} from "../constants.js";
+} from "../constants";
 
-const userSchema = new Schema(
+export interface IUser {
+  username: string;
+  email: string;
+  fullName: string;
+  avatar: string;
+  coverImage: string;
+  watchHistory: string[];
+  password: string;
+  refreshToken: string;
+}
+
+export interface IUserDocument extends IUser, mongoose.Document {
+  isPasswordCorrect(password: string): Promise<boolean>;
+  generateAccessToken(): string;
+  generateRefreshToken(): string;
+}
+
+const userSchema = new Schema<IUserDocument>(
   {
     username: {
       type: String,
@@ -25,12 +42,7 @@ const userSchema = new Schema(
       loweCase: true,
       trim: true,
     },
-    fullName: {
-      type: String,
-      required: true,
-      trim: true,
-      index: true,
-    },
+    fullName: { type: String, required: true, trim: true, index: true },
     avatar: {
       type: String, // cloudinary url
       required: true,
@@ -38,23 +50,11 @@ const userSchema = new Schema(
     coverImage: {
       type: String, // cloudinary url
     },
-    watchHistory: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Video",
-      },
-    ],
-    password: {
-      type: String,
-      required: [true, "Password is required"],
-    },
-    refreshToken: {
-      type: String,
-    },
+    watchHistory: [{ type: Schema.Types.ObjectId, ref: "Video" }],
+    password: { type: String, required: [true, "Password is required"] },
+    refreshToken: { type: String },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 userSchema.pre("save", async function (next) {
@@ -65,7 +65,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-userSchema.methods.isPasswordCorrect = async function (password) {
+userSchema.methods.isPasswordCorrect = async function (password: string) {
   return await bcrypt.compare(password, this.password);
 };
 
@@ -78,21 +78,13 @@ userSchema.methods.generateAccessToken = function () {
       fullName: this.fullName,
     },
     ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: ACCESS_TOKEN_EXPIRY,
-    }
+    { expiresIn: ACCESS_TOKEN_EXPIRY }
   );
 };
 userSchema.methods.generateRefreshToken = function () {
-  return jwt.sign(
-    {
-      _id: this._id,
-    },
-    REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: REFRESH_TOKEN_EXPIRY,
-    }
-  );
+  return jwt.sign({ _id: this._id }, REFRESH_TOKEN_SECRET, {
+    expiresIn: REFRESH_TOKEN_EXPIRY,
+  });
 };
 
-export const User = mongoose.model("User", userSchema);
+export const User = mongoose.model<IUserDocument>("User", userSchema);

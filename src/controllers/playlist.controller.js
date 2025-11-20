@@ -6,7 +6,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import {
   deleteFromCloudinary,
   uploadOnCloudinary,
-} from "../utils/cloudinary.js";
+} from "../utils/cloudinary.5s";
 
 const createPlaylist = asyncHandler(async (req, res) => {
   let { name, description = "" } = req.body;
@@ -35,10 +35,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
     description: description?.trim(),
     owner: userId,
     videos: [],
-    thumbnail: {
-      url: thumbnail.url,
-      publicId: thumbnail.public_id,
-    },
+    thumbnail: { url: thumbnail.url, publicId: thumbnail.public_id },
   });
 
   if (!playlist) {
@@ -76,33 +73,17 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
 
   const playlists = await Playlist.aggregatePaginate(
     [
-      {
-        $match: {
-          owner: new mongoose.Types.ObjectId(userId),
-        },
-      },
+      { $match: { owner: new mongoose.Types.ObjectId(userId) } },
       {
         $lookup: {
           from: "videos",
           localField: "videos",
           foreignField: "_id",
           as: "videos",
-          pipeline: [
-            {
-              $project: {
-                thumbnail: 1,
-                title: 1,
-                duration: 1,
-              },
-            },
-          ],
+          pipeline: [{ $project: { thumbnail: 1, title: 1, duration: 1 } }],
         },
       },
-      {
-        $addFields: {
-          videoCount: { $size: "$videos" },
-        },
-      },
+      { $addFields: { videoCount: { $size: "$videos" } } },
     ],
     options
   );
@@ -128,11 +109,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
   }
 
   const playlist = await Playlist.aggregate([
-    {
-      $match: {
-        _id: new mongoose.Types.ObjectId(playlistId),
-      },
-    },
+    { $match: { _id: new mongoose.Types.ObjectId(playlistId) } },
     {
       $lookup: {
         from: "videos",
@@ -146,21 +123,10 @@ const getPlaylistById = asyncHandler(async (req, res) => {
               localField: "owner",
               foreignField: "_id",
               as: "owner",
-              pipeline: [
-                {
-                  $project: {
-                    username: 1,
-                    avatar: 1,
-                  },
-                },
-              ],
+              pipeline: [{ $project: { username: 1, avatar: 1 } }],
             },
           },
-          {
-            $addFields: {
-              owner: { $first: "$owner" },
-            },
-          },
+          { $addFields: { owner: { $first: "$owner" } } },
         ],
       },
     },
@@ -170,14 +136,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
         localField: "owner",
         foreignField: "_id",
         as: "owner",
-        pipeline: [
-          {
-            $project: {
-              username: 1,
-              avatar: 1,
-            },
-          },
-        ],
+        pipeline: [{ $project: { username: 1, avatar: 1 } }],
       },
     },
     {
@@ -206,10 +165,7 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
   }
 
   // Check if user owns the playlist
-  const playlist = await Playlist.findOne({
-    _id: playlistId,
-    owner: userId,
-  });
+  const playlist = await Playlist.findOne({ _id: playlistId, owner: userId });
 
   if (!playlist) {
     throw new ApiError(404, "Playlist not found or you don't have permission");
@@ -227,17 +183,12 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
   // Add video to playlist
   const updatedPlaylist = await Playlist.findByIdAndUpdate(
     playlistId,
-    {
-      $addToSet: { videos: videoId },
-    },
+    { $addToSet: { videos: videoId } },
     { new: true }
   ).populate({
     path: "videos",
     select: "title thumbnail duration owner",
-    populate: {
-      path: "owner",
-      select: "username avatar",
-    },
+    populate: { path: "owner", select: "username avatar" },
   });
 
   if (!updatedPlaylist) {
@@ -264,10 +215,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
   }
 
   // Check if user owns the playlist
-  const playlist = await Playlist.findOne({
-    _id: playlistId,
-    owner: userId,
-  });
+  const playlist = await Playlist.findOne({ _id: playlistId, owner: userId });
 
   if (!playlist) {
     throw new ApiError(404, "Playlist not found or you don't have permission");
@@ -276,17 +224,12 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
   // Remove video from playlist
   const updatedPlaylist = await Playlist.findByIdAndUpdate(
     playlistId,
-    {
-      $pull: { videos: videoId },
-    },
+    { $pull: { videos: videoId } },
     { new: true }
   ).populate({
     path: "videos",
     select: "title thumbnail duration",
-    populate: {
-      path: "owner",
-      select: "username avatar",
-    },
+    populate: { path: "owner", select: "username avatar" },
   });
 
   return res
@@ -309,10 +252,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
   }
 
   // First find the playlist to get the thumbnail info
-  const playlist = await Playlist.findOne({
-    _id: playlistId,
-    owner: userId,
-  });
+  const playlist = await Playlist.findOne({ _id: playlistId, owner: userId });
 
   if (!playlist) {
     throw new ApiError(404, "Playlist not found or you don't have permission");

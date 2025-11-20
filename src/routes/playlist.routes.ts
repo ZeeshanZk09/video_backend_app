@@ -9,7 +9,7 @@ import {
   updatePlaylist,
 } from "../controllers/playlist.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { upload } from "./../middlewares/multer.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
 import { parseUpdateFields } from "../middlewares/parse_update_playlist_fields.middleware.js";
 
 const router = Router();
