@@ -1,13 +1,13 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { API_ROUTE, CORS_ORIGIN } from "./constants.js";
+import { API_ROUTE, CORS_ORIGIN } from "@/constants";
 
 const app = express();
 
 app.use(
   cors({
-    origin: CORS_ORIGIN,
+    origin: [CORS_ORIGIN, "http://localhost:3000"],
     credentials: true,
   })
 );
@@ -18,15 +18,15 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 //routes import
-import userRouter from "./routes/user.routes.js";
-import healthcheckRouter from "./routes/healthcheck.routes.js";
-import tweetRouter from "./routes/tweet.routes.js";
-import subscriptionRouter from "./routes/subscription.routes.js";
-import videoRouter from "./routes/video.routes.js";
-import commentRouter from "./routes/comment.routes.js";
-import likeRouter from "./routes/like.routes.js";
-import playlistRouter from "./routes/playlist.routes.js";
-import dashboardRouter from "./routes/dashboard.routes.js";
+import userRouter from "@/routes/user.routes";
+import healthcheckRouter from "@/routes/healthcheck.routes";
+import tweetRouter from "@/routes/tweet.routes";
+import subscriptionRouter from "@/routes/subscription.routes";
+import videoRouter from "@/routes/video.routes";
+import commentRouter from "@/routes/comment.routes";
+import likeRouter from "@/routes/like.routes";
+import playlistRouter from "@/routes/playlist.routes";
+import dashboardRouter from "@/routes/dashboard.routes";
 
 //routes declaration
 app.use(`${API_ROUTE}/users`, userRouter);

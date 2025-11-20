@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { PaginateModel, Schema } from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 
 export interface ILike {
@@ -22,4 +22,7 @@ const likeSchema = new Schema<ILikeDocument>(
 
 likeSchema.plugin(mongoosePaginate);
 
-export const Like = mongoose.model<ILikeDocument>("Like", likeSchema);
+export const Like = mongoose.model<ILikeDocument, PaginateModel<ILikeDocument>>(
+  "Like",
+  likeSchema
+);

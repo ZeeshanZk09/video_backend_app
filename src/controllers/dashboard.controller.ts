@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
-import { Video } from "../models/video.model.js";
-import { Subscription } from "../models/subscription.model.js";
-import { Like } from "../models/like.model.js";
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { Video } from "@/models/video.model";
+import { Subscription } from "@/models/subscription.model";
+import { Like } from "@/models/like.model";
+import { ApiError } from "@/utils/ApiError";
+import { ApiResponse } from "@/utils/ApiResponse";
+import { asyncHandler } from "@/utils/asyncHandler";
 
 const getChannelStats = asyncHandler(async (req, res) => {
   const channelId = req.user?._id; // Assuming the logged-in user is the channel owner
@@ -71,24 +71,31 @@ const getChannelStats = asyncHandler(async (req, res) => {
 const getChannelVideos = asyncHandler(async (req, res) => {
   const channelId = req.user?._id; // Assuming the logged-in user is the channel owner
   const {
-    page = 1,
-    limit = 10,
+    page = "1",
+    limit = "10",
     sortBy = "createdAt",
     sortType = "desc",
-  } = req.query;
+  } = req.query as {
+    page?: string;
+    limit?: string;
+    sortBy?: string;
+    sortType?: string;
+  };
 
   if (!mongoose.Types.ObjectId.isValid(channelId)) {
     throw new ApiError(400, "Invalid channel ID");
   }
 
   // Sorting options
-  const sortOptions = {};
-  sortOptions[sortBy] = sortType === "desc" ? -1 : 1;
+  const sortOptions: Record<string, number> = {};
+  const sortByKey = String(sortBy || "createdAt");
+  const sortOrder = String(sortType || "desc") === "desc" ? -1 : 1;
+  sortOptions[sortByKey] = sortOrder;
 
   // Pagination options
   const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
+    page: parseInt(page as string, 10),
+    limit: parseInt(limit as string, 10),
     sort: sortOptions,
     populate: {
       path: "owner",

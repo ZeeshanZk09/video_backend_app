@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { PaginateModel } from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 
 export interface ISubscription {
@@ -26,7 +27,7 @@ const subscriptionSchema = new Schema<ISubscriptionDocument>(
 
 subscriptionSchema.plugin(mongoosePaginate);
 
-export const Subscription = mongoose.model<ISubscriptionDocument>(
-  "Subscription",
-  subscriptionSchema
-);
+export const Subscription = mongoose.model<
+  ISubscriptionDocument,
+  PaginateModel<ISubscriptionDocument>
+>("Subscription", subscriptionSchema);

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { DB_NAME, MONGODB_URI } from "../constants.js";
+import { DB_NAME, MONGODB_URI } from "@/constants";
 
 const connectDB = async () => {
   try {
@@ -13,8 +13,8 @@ const connectDB = async () => {
       : `${MONGODB_URI}/${DB_NAME}`;
 
     const connectionInstance = await mongoose.connect(connectionString, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      //   useNewUrlParser: true,
+      //   useUnifiedTopology: true,
       // Remove these if using MongoDB 6+ or having connection issues
       // serverSelectionTimeoutMS: 5000,
       // socketTimeoutMS: 45000
@@ -22,7 +22,7 @@ const connectDB = async () => {
     console.log(
       `\n MongoDB connected !! DB HOST: ${connectionInstance.connection.host}`
     );
-    return connectionInstance;
+    return connectionInstance.connection;
   } catch (error) {
     console.log("MONGODB connection FAILED ", error);
     process.exit(1);

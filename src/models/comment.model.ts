@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { AggregatePaginateModel } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 export interface ICommentDocument extends mongoose.Document {
@@ -22,7 +23,7 @@ const commentSchema = new Schema<ICommentDocument>(
 
 commentSchema.plugin(mongooseAggregatePaginate);
 
-export const Comment = mongoose.model<ICommentDocument>(
-  "Comment",
-  commentSchema
-);
+export const Comment = mongoose.model<
+  ICommentDocument,
+  AggregatePaginateModel<ICommentDocument>
+>("Comment", commentSchema);

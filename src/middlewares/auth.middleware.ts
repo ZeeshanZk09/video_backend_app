@@ -1,12 +1,18 @@
-import { ApiError } from "../utils/ApiError.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
-import jwt, { JwtPayload } from "jsonwebtoken";
-import { IUser, User } from "../models/user.model.js";
-import { ACCESS_TOKEN_SECRET } from "../constants.js";
+import { ApiError } from "@/utils/ApiError";
+import { asyncHandler } from "@/utils/asyncHandler";
+import jwt from "jsonwebtoken";
+import { IUser, IUserDocument, User } from "@/models/user.model";
+import { ACCESS_TOKEN_SECRET } from "@/constants";
 import { Request } from "express";
 
+interface JwtPayload {
+  _id: string;
+  email: string;
+  username: string;
+  fullName: string;
+}
 export const verifyJWT = asyncHandler(
-  async (req: Request<{}, {}, IUser>, _, next) => {
+  async (req: Request<{}, {}, IUserDocument>, _, next) => {
     try {
       const token =
         req.cookies?.accessToken ||

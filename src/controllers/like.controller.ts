@@ -1,8 +1,8 @@
 import mongoose, { isValidObjectId } from "mongoose";
-import { Like } from "../models/like.model.js";
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { Like } from "@/models/like.model";
+import { ApiError } from "@/utils/ApiError";
+import { ApiResponse } from "@/utils/ApiResponse";
+import { asyncHandler } from "@/utils/asyncHandler";
 
 const toggleVideoLike = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
@@ -115,8 +115,8 @@ const getLikedVideos = asyncHandler(async (req, res) => {
 
   // Pagination options
   const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
+    page: parseInt(page as string),
+    limit: parseInt(limit as string),
     populate: [
       {
         path: "video",

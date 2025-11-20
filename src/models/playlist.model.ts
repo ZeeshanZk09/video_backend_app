@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { AggregatePaginateModel, Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 export interface IPlaylist {
@@ -24,7 +24,7 @@ const playlistSchema = new Schema<IPlaylistDocument>(
 
 playlistSchema.plugin(mongooseAggregatePaginate);
 
-export const Playlist = mongoose.model<IPlaylistDocument>(
-  "Playlist",
-  playlistSchema
-);
+export const Playlist = mongoose.model<
+  IPlaylistDocument,
+  AggregatePaginateModel<IPlaylistDocument>
+>("Playlist", playlistSchema);

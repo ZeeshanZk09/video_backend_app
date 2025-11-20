@@ -1,11 +1,16 @@
-import { upload } from "./multer.middleware.js";
+import { NextFunction, Request, Response } from "express";
+import { upload } from "@/middlewares/multer.middleware";
 import { body } from "express-validator";
 
 export const parseUpdateFields = [
   upload.single("thumbnail"),
   body("name").optional(),
   body("description").optional(),
-  (req, res, next) => {
+  (
+    req: Request<{}, {}, { name?: string; description?: string }>,
+    res: Response,
+    next: NextFunction
+  ) => {
     // If content-type is JSON, parse body normally
     if (req.headers["content-type"]?.includes("application/json")) {
       return next();

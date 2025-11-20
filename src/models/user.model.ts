@@ -6,7 +6,7 @@ import {
   ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_EXPIRY,
   REFRESH_TOKEN_SECRET,
-} from "../constants";
+} from "@/constants";
 
 export interface IUser {
   username: string;
@@ -23,6 +23,10 @@ export interface IUserDocument extends IUser, mongoose.Document {
   isPasswordCorrect(password: string): Promise<boolean>;
   generateAccessToken(): string;
   generateRefreshToken(): string;
+}
+
+export interface RequestWithUser extends Request {
+  user?: IUserDocument | null;
 }
 
 const userSchema = new Schema<IUserDocument>(

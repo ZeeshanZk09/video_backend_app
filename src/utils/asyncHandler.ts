@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 
 const asyncHandler = (fn: RequestHandler): RequestHandler => {
   return (req, res, next) => {
+    console.log(req);
     Promise.resolve(fn(req, res, next)).catch((err) => next(err));
   };
 };

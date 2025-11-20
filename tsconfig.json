@@ -1,19 +1,24 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "moduleResolution": "node",
     "target": "ES2020",
-    "module": "nodenext",
-    "moduleResolution": "node16",
-    "outDir": "dist",
-    "rootDir": "src",
-    "strict": true,
+    "module": "commonjs",
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
     "resolveJsonModule": true,
-    "allowJs": true, // enables incremental migration
-    "noImplicitAny": true,
-    "paths": { "@/*": ["./src/*"] }
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "isolatedModules": true,
+    "incremental": true,
+    "allowJs": true,
+    "plugins": []
   },
-  "include": ["src/**/*", "types/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src", "types"],
+  "exclude": ["node_modules"]
 }

@@ -1,12 +1,12 @@
 import mongoose, { isValidObjectId } from "mongoose";
-import { Playlist } from "../models/playlist.model.js";
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { Playlist } from "@/models/playlist.model";
+import { ApiError } from "@/utils/ApiError";
+import { ApiResponse } from "@/utils/ApiResponse";
+import { asyncHandler } from "@/utils/asyncHandler";
 import {
   deleteFromCloudinary,
   uploadOnCloudinary,
-} from "../utils/cloudinary.5s";
+} from "@/utils/cloudinary.js";
 
 const createPlaylist = asyncHandler(async (req, res) => {
   let { name, description = "" } = req.body;
@@ -66,8 +66,8 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
   }
 
   const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
+    page: parseInt(page as string),
+    limit: parseInt(limit as string),
     sort: { createdAt: -1 },
   };
 
@@ -172,11 +172,7 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
   }
 
   // Check if video already exists in playlist
-  if (
-    playlist.videos.some((vid) =>
-      vid.equals(new mongoose.Types.ObjectId(videoId))
-    )
-  ) {
+  if (playlist.videos.some((vid) => vid.toString() === videoId)) {
     throw new ApiError(400, "Video already exists in playlist");
   }
 
@@ -285,7 +281,11 @@ const updatePlaylist = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid playlist ID");
   }
 
-  const updateFields = {};
+  const updateFields: {
+    name?: string;
+    description?: string;
+    thumbnail?: { url: string; publicId: string };
+  } = {};
 
   // Handle name update
   if (name !== undefined) {

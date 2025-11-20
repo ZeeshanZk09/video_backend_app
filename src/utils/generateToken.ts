@@ -1,8 +1,11 @@
-import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from "../constants.js";
-import { User } from "../models/user.model.js";
+import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from "@/constants";
+import { User } from "@/models/user.model";
 import mongoose from "mongoose";
+import { ApiError } from "@/utils/ApiError";
 
-const generateAccessAndRefreshTokens = async (userId) => {
+const generateAccessAndRefreshTokens = async (
+  userId: mongoose.Types.ObjectId
+) => {
   try {
     // 1. Validate userId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -42,7 +45,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
       accessToken,
       refreshToken,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in generateAccessAndRefreshTokens:", error);
     throw new ApiError(500, error.message || "Failed to generate tokens");
   }

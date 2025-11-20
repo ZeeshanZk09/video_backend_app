@@ -2,12 +2,12 @@
   "name": "video_backend_app",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
+  "type": "commonjs",
   "main": "./src/index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules ./src/index.js",
-    "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js",
+    "dev": "nodemon --watch 'src/**/*.ts types/**/*.ts' --exec 'ts-node -r tsconfig-paths/register' src/index.ts",
+    "build": "tsc -p tsconfig.json && tsc-alias",
+    "start": "node dist/index.js",
     "type-check": "tsc --noEmit"
   },
   "keywords": [
@@ -32,11 +32,13 @@
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "fork-ts-checker-webpack-plugin": "^9.1.0",
-    "nodemon": "^3.0.1",
+    "nodemon": "^3.1.11",
     "prettier": "^3.6.2",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.0-dev.20251120"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

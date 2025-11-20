@@ -1,9 +1,8 @@
 import mongoose, { isValidObjectId } from "mongoose";
-import { User } from "../models/user.model.js";
-import { Subscription } from "../models/subscription.model.js";
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { Subscription } from "@/models/subscription.model";
+import { ApiError } from "@/utils/ApiError";
+import { ApiResponse } from "@/utils/ApiResponse";
+import { asyncHandler } from "@/utils/asyncHandler";
 
 const toggleSubscription = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
@@ -58,8 +57,8 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   }
 
   const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
+    page: parseInt(page as string),
+    limit: parseInt(limit as string),
     populate: {
       path: "subscriber",
       select: "username fullName avatar",
@@ -93,8 +92,8 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
   }
 
   const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
+    page: parseInt(page as string),
+    limit: parseInt(limit as string),
     sort: { createdAt: -1 },
     populate: {
       path: "channel",
